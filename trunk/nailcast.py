@@ -152,16 +152,28 @@ def artwork(scene, offset, s, r, im):
     return ctr
 
 def portrait():
-    s = 20   # length of triangle side
-    im = Image.open("Lenna.png")
-    scale = 1024 / im.size[1];
-    im = im.resize((scale * im.size[0], scale * im.size[1]))
+    screen_ppi = 72
+    screen_pixels_per_mm = screen_ppi / 25.4
+    canvas_width_mm = 300
+    canvas_pixels = canvas_width_mm * screen_pixels_per_mm
+    triangle_side_mm = 3.7
+    s = triangle_side_mm * screen_pixels_per_mm  # length of triangle side
     r = math.sqrt(s * s - s * s / 4) / 2
-    scene = Scene('test', im.size[0], im.size[1])
+    s = int(round(s))
+    r = int(round(r))
+    infile = "Lenna.png"
+    stem = os.path.splitext(os.path.basename(infile))[0]
+    im = Image.open(infile)
+    scale = canvas_pixels / im.size[1];
+    im = im.resize((int(scale * im.size[0]), int(scale * im.size[1])))
+    scene = Scene(stem, im.size[1], im.size[0])
     makeitwork = math.tan(math.pi / 6) * 0.5 * s
     count = artwork(scene, (0, r), s, r, im)
     count += artwork(scene, (s / 2, r - makeitwork), s, r, im)
     scene.write_svg()
+    print "%d nails, cell size %0.1f mm (%0.1f pixels)" % (count, 
+                                                           triangle_side_mm,
+                                                           s)
     scene.display()
 
 if __name__ == '__main__': portrait()
