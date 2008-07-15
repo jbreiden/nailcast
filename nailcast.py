@@ -30,7 +30,7 @@ class Scene:
     def strarray(self):
         var = ["<?xml version=\"1.0\"?>\n",
                "<svg height=\"%d\" width=\"%d\" >\n" % (self.height,self.width),
-               " <g style=\"fill-opacity:1.0; stroke:white;",
+               " <g style=\"fill-opacity:1.0; stroke:gray;",
                " stroke-width:1; \">\n"]
         for item in self.items: var += item.strarray()
         var += [" </g>\n</svg>\n"]
@@ -175,7 +175,7 @@ def portrait(argv=None):
     screen_pixels_per_mm = screen_ppi / 25.4
     canvas_width_mm = 300
     canvas_pixels = canvas_width_mm * screen_pixels_per_mm
-    triangle_side_mm = 3.7
+    triangle_side_mm = 5
     s = triangle_side_mm * screen_pixels_per_mm  # length of triangle side
     r = math.sqrt(s * s - s * s / 4) / 2
     s = int(round(s))
