@@ -1,14 +1,11 @@
 #!/usr/bin/env python
-"""\
+"""
 nailcast.py - Simulate nail shadows
 
-Makes use (and directly copies some code from) the example
-program SVG.py found on ActiveState.
+Author: Jeff Breidenbach
 
+This program contains code snippets from
 http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/325823
-
-Input: image
-Output: nail shadow halftone simulation
 
 """
 
@@ -91,9 +88,10 @@ def Pyramid(scene, center, s, r, halftone):
     blue = (0, 0, 255)
     green = (0, 255, 0)
     red = (255, 0, 0)
-    a = (center[0], center[1] - r) # top
-    b = (center[0] + s/2, center[1] + r) # bottom right
-    c = (center[0] - s/2, center[1] + r) # bottom left
+    white = (255, 255, 255)
+    a = (center[0], center[1] - r) # north
+    b = (center[0] + s/2, center[1] + r) # southeast
+    c = (center[0] - s/2, center[1] + r) # southwest
     ab_tip = some(a,b,halftone[0])
     ac_tip = some(a,c,halftone[0])
     ba_tip = some(b,a,halftone[1])
@@ -112,9 +110,9 @@ def Pyramid(scene, center, s, r, halftone):
         scene.add(Line(bc_tip, cb_tip, red, w))
     if ca_tip[0] > ac_tip[0]:
         scene.add(Line(ac_tip, ca_tip, green, w))
-    scene.add(Circle(a, w/2, (255,255,255)))
-    scene.add(Circle(c, w/2, (255,255,255)))
-    scene.add(Circle(b, w/2, (255,255,255)))
+    scene.add(Circle(a, w/2, white))
+    scene.add(Circle(c, w/2, white))
+    scene.add(Circle(b, w/2, white))
 
 def rgb2abc(rgb):
     return ((+ rgb[0] - rgb[1] - rgb[2] + 255) / 255.0,
@@ -140,26 +138,29 @@ def get_cell_color_analytic(x,y,im):
     return (a, b, c)
 
 def artwork(scene, offset, s, r, im):
+    ctr = 0
     for y in range(int(offset[1]), im.size[1], int(r*4)):
         if y >= 0:
             for x in range(offset[0], im.size[0], s):
                 Pyramid(scene,(x, y),
-                        s, r, get_cell_color_analytic(x,y,im))
+                        s, r, get_cell_color_analytic(x, y, im))
+                ctr += 3
             for x in range(offset[0] + s/2, im.size[0], s):
                 Pyramid(scene,(x, y + 2 * r),
-                        s, r, get_cell_color_analytic(x,y,im))
-    return
+                        s, r, get_cell_color_analytic(x, y, im))
+                ctr += 3
+    return ctr
 
 def portrait():
-    s = 10   # Max length of a nail
+    s = 20   # length of triangle side
     im = Image.open("Lenna.png")
     scale = 1024 / im.size[1];
     im = im.resize((scale * im.size[0], scale * im.size[1]))
     r = math.sqrt(s * s - s * s / 4) / 2
     scene = Scene('test', im.size[0], im.size[1])
-    makeitwork = math.tan(math.pi/6) * 0.5 * s
-    artwork(scene, (0,0), s, r, im)
-    artwork(scene, (s/2, - makeitwork), s, r, im)
+    makeitwork = math.tan(math.pi / 6) * 0.5 * s
+    count = artwork(scene, (0, r), s, r, im)
+    count += artwork(scene, (s / 2, r - makeitwork), s, r, im)
     scene.write_svg()
     scene.display()
 
