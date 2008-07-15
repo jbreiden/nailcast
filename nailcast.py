@@ -11,6 +11,7 @@ http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/325823
 
 import random
 import os
+import sys
 import math
 import Image
 import ImageChops
@@ -122,14 +123,14 @@ def rgb2abc(rgb):
 def get_cell_color_analytic(x,y,im):
     rgb = im.getpixel((x,y))
     alpha = 1
-    y = round(0.299 * rgb[0] + 0.144 * rgb[1] + 0.615 * rgb[2])
+    y = round(0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2])
     a = -1
     b = -1
     c = -1
     lookup = rgb2abc(rgb)
     while a < 0 or b < 0 or c < 0 or a > 1 or b > 1 or c > 1:
         if (alpha < -0.2):
-            print "bug"
+            print "bug - why can't we find RGB %s %s %s" % rgb
             break
         a, b, c = rgb2abc((alpha * rgb[0]  + (1 - alpha) * y,
                            alpha * rgb[1]  + (1 - alpha) * y,
@@ -151,7 +152,9 @@ def artwork(scene, offset, s, r, im):
                 ctr += 3
     return ctr
 
-def portrait():
+def portrait(argv=None):
+    if argv is None:
+        argv = sys.argv
     screen_ppi = 72
     screen_pixels_per_mm = screen_ppi / 25.4
     canvas_width_mm = 300
@@ -161,7 +164,10 @@ def portrait():
     r = math.sqrt(s * s - s * s / 4) / 2
     s = int(round(s))
     r = int(round(r))
-    infile = "Lenna.png"
+    if len(argv) == 2:
+        infile = argv[1]
+    else:
+        infile = "Lenna.png"
     stem = os.path.splitext(os.path.basename(infile))[0]
     im = Image.open(infile)
     scale = canvas_pixels / im.size[1];
