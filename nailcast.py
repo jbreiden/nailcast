@@ -98,8 +98,19 @@ def some(a,b,fraction):
     return (a[0] + fraction * (b[0] - a[0]),
             a[1] + fraction * (b[1] - a[1]))
 
+
+# Draw a pyramid
+# @scene  - this is just the SVG canvas we draw on
+# @center - x,y coordinates of center in final image pixels 
+# @s - length of a triangle side in final image pixels
+# @r - half of the height of an equilatoral triangle in pixels.
+#      this could be computed from s, but I got a little bit lazy
+#      and didn't want to recompute all over the place (also
+#      the calculation requires a square root
+# @halftone - (a, b, c) This is the heights of the three nails,
+#             and their range is from 0 to 1
 def Pyramid(scene, center, s, r, halftone):
-    epsilon = 0.1  # Don't both for tiny nails
+    epsilon = 0.1  # Don't bother for tiny nails
     count = 0 # how many nails did we use?
     w = 2
     yellow = (255, 255, 0)
@@ -179,11 +190,11 @@ def artwork(scene, offset, s, r, im):
 def portrait(argv=None):
     if argv is None:
         argv = sys.argv
-    screen_ppi = 92
+    screen_ppi = 72
     screen_pixels_per_mm = screen_ppi / 25.4
     canvas_width_mm = 300
     canvas_pixels = canvas_width_mm * screen_pixels_per_mm
-    triangle_side_mm = 5
+    triangle_side_mm = 3.7
     s = triangle_side_mm * screen_pixels_per_mm  # length of triangle side
     r = math.sqrt(s * s - s * s / 4) / 2
     s = int(round(s))
