@@ -15,7 +15,7 @@ import sys
 import math
 import Image
 import ImageChops
-display_prog = 'display' # Command to execute to display images.
+display_prog = 'rsvg' # Command to execute to display images.
 
 class Scene:
     def __init__(self,name="svg",height=400,width=400):
@@ -30,7 +30,7 @@ class Scene:
     def strarray(self):
         var = ["<?xml version=\"1.0\"?>\n",
                "<svg height=\"%d\" width=\"%d\" >\n" % (self.height,self.width),
-               " <g style=\"fill-opacity:1.0; stroke:black;",
+               " <g style=\"fill-opacity:1.0; stroke:white;",
                " stroke-width:1; \">\n"]
         for item in self.items: var += item.strarray()
         var += [" </g>\n</svg>\n"]
@@ -47,7 +47,8 @@ class Scene:
         return
 
     def display(self,prog=display_prog):
-        os.system("%s %s" % (prog,self.svgname))
+        os.system("%s -d 92 %s %s-out.png" % (prog, self.svgname, self.name))
+        os.system("display %s-out.png" % self.name)
         return
 
 class Line:
@@ -155,7 +156,7 @@ def artwork(scene, offset, s, r, im):
 def portrait(argv=None):
     if argv is None:
         argv = sys.argv
-    screen_ppi = 72
+    screen_ppi = 92
     screen_pixels_per_mm = screen_ppi / 25.4
     canvas_width_mm = 300
     canvas_pixels = canvas_width_mm * screen_pixels_per_mm
