@@ -98,6 +98,8 @@ def some(a,b,fraction):
             a[1] + fraction * (b[1] - a[1]))
 
 def Pyramid(scene, center, s, r, halftone):
+    if halftone = (0, 0, 0):
+        return
     w = 2
     yellow = (255, 255, 0)
     cyan = (0, 255, 255)
