@@ -47,8 +47,8 @@ class Scene:
         return
 
     def display(self,prog=display_prog):
-        os.system("%s -d 92 %s %s-out.png" % (prog, self.svgname, self.name))
-        os.system("display %s-out.png" % self.name)
+        os.system("%s -d 92 %s %s-out.jpg" % (prog, self.svgname, self.name))
+        os.system("display %s-out.jpg" % self.name)
         return
 
 class Line:
@@ -75,6 +75,21 @@ class Circle:
         return ["  <circle cx=\"%d\" cy=\"%d\" r=\"%d\" " %\
                 (self.center[0],self.center[1],self.radius),
                 "style=\"fill:%s; stroke-width:1;\"  />\n" % colorstr(self.color)]
+
+class Rectangle:
+    def __init__(self,origin,height,width,color):
+        self.origin = origin
+        self.height = height
+        self.width = width
+        self.color = color
+        return
+
+    def strarray(self):
+        return ["  <rect x=\"%d\" y=\"%d\" height=\"%d\"\n" %\
+                (self.origin[0],self.origin[1],self.height),
+                "    width=\"%d\" style=\"fill:%s;\" />\n" %\
+                (self.width,colorstr(self.color))]
+
 
 def colorstr(rgb): return "#%x%x%x" % (rgb[0]/16,rgb[1]/16,rgb[2]/16)
 
@@ -175,6 +190,7 @@ def portrait(argv=None):
     im = im.resize((int(scale * im.size[0]), int(scale * im.size[1])))
     scene = Scene(stem, im.size[1], im.size[0])
     makeitwork = math.tan(math.pi / 6) * 0.5 * s
+    scene.add(Rectangle((0,0),im.size[1], im.size[0], (255,255,255)))
     count = artwork(scene, (0, r), s, r, im)
     count += artwork(scene, (s / 2, r - makeitwork), s, r, im)
     scene.write_svg()
