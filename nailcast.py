@@ -15,6 +15,7 @@ import sys
 import math
 import Image
 import ImageChops
+import ImageFilter
 display_prog = 'rsvg' # Command to execute to display images.
 
 class Scene:
@@ -98,8 +99,8 @@ def some(a,b,fraction):
             a[1] + fraction * (b[1] - a[1]))
 
 def Pyramid(scene, center, s, r, halftone):
-    if halftone = (0, 0, 0):
-        return
+    epsilon = 0.1  # Don't both for tiny nails
+    count = 0 # how many nails did we use?
     w = 2
     yellow = (255, 255, 0)
     cyan = (0, 255, 255)
@@ -117,21 +118,28 @@ def Pyramid(scene, center, s, r, halftone):
     bc_tip = some(b,c,halftone[1])
     ca_tip = some(c,a,halftone[2])
     cb_tip = some(c,b,halftone[2])
-    scene.add(Line(a, ab_tip, magenta, w))
-    scene.add(Line(a, ac_tip, yellow, w))
-    scene.add(Line(b, ba_tip, cyan, w))
-    scene.add(Line(b, bc_tip, yellow, w))
-    scene.add(Line(c, ca_tip, cyan, w))
-    scene.add(Line(c, cb_tip, magenta, w))
+    if halftone[0] > epsilon:
+        scene.add(Line(a, ab_tip, magenta, w))
+        scene.add(Line(a, ac_tip, yellow, w))
+        scene.add(Circle(a, w/2, white))
+        count += 1
+    if halftone[1] > epsilon:
+        scene.add(Line(b, ba_tip, cyan, w))
+        scene.add(Line(b, bc_tip, yellow, w))
+        scene.add(Circle(b, w/2, white))
+        count += 1
+    if halftone[2] > epsilon:
+        scene.add(Line(c, ca_tip, cyan, w))
+        scene.add(Line(c, cb_tip, magenta, w))
+        scene.add(Circle(c, w/2, white))
+        count += 1
     if ab_tip[0] > ba_tip[0]:
         scene.add(Line(ab_tip, ba_tip, blue, w))
     if bc_tip[0] < cb_tip[0]:
         scene.add(Line(bc_tip, cb_tip, red, w))
     if ca_tip[0] > ac_tip[0]:
         scene.add(Line(ac_tip, ca_tip, green, w))
-    scene.add(Circle(a, w/2, white))
-    scene.add(Circle(c, w/2, white))
-    scene.add(Circle(b, w/2, white))
+    return count
 
 def rgb2abc(rgb):
     return ((+ rgb[0] - rgb[1] - rgb[2] + 255) / 255.0,
@@ -161,13 +169,11 @@ def artwork(scene, offset, s, r, im):
     for y in range(int(offset[1]), im.size[1], int(r*4)):
         if y >= 0:
             for x in range(offset[0], im.size[0], s):
-                Pyramid(scene,(x, y),
-                        s, r, get_cell_color_analytic(x, y, im))
-                ctr += 3
+                ctr += Pyramid(scene,(x, y),
+                               s, r, get_cell_color_analytic(x, y, im))
             for x in range(offset[0] + s/2, im.size[0], s):
-                Pyramid(scene,(x, y + 2 * r),
-                        s, r, get_cell_color_analytic(x, y, im))
-                ctr += 3
+                ctr += Pyramid(scene,(x, y + 2 * r),
+                               s, r, get_cell_color_analytic(x, y, im))
     return ctr
 
 def portrait(argv=None):
