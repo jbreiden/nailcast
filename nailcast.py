@@ -3,7 +3,7 @@
 nailcast.py - Simulate nail shadows
 
 Author: Jeff Breidenbach
-
+ 
 This program contains code snippets from
 http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/325823
 
