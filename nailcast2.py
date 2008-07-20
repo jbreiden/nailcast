@@ -4,7 +4,7 @@ nailcast.py - Simulate nail shadows
 
 Author: Jeff Breidenbach
         Francois Lefevere
- 
+
 """
 
 from Numeric import arange
@@ -20,7 +20,7 @@ from stl import *
 
 canvas_width_mm = 280.0
 margin_mm = 10.0
-triangle_side_mm = 8.0
+triangle_side_mm = 6.0
 thickness_mm = 3.0
 light_dist_mm = 4000
 
@@ -47,7 +47,7 @@ class MeshGenerator:
       self.nails = []
       self.triangle_side_mm = triangle_side_mm
       self.dx = triangle_side_mm / 6.0
-      self.dy = self.dx * sqrt(3) / 2.0
+      self.dy = self.dx * math.sqrt(3) / 2
       self.margin_mm = margin_mm
 
     def AddNail(self, nail):
@@ -170,22 +170,99 @@ def InvPyramid(center, halftone, mesh):
     mesh.AddNail(Nail(center[0], center[1], 2, halftone[2]))
     return 3
 
-# Lay out a whole bunch of regularly spaced pyramids
-def artwork2(offset, im, mesh):
+
+#  \            /\            /\            /\
+#   \          /  \          /  \          /  \
+#    \        /    \        /    \        /    \
+#  +  \      /  +   \      /  +   \      /  +   \
+#      \    /        \    /        \    /        \
+#       \  /          \  /          \  /          \
+#  ______\/____________\/____________\/____________\
+#        /\            /\            /\            /
+#       /  \          /  \          /  \          /
+#      /    \        /    \        /    \        /
+#     /      \      /      \      /      \      /
+#    /        \    /        \    /        \    /
+#   /          \  /          \  /          \  /
+#  /____________\/____________\/____________\/______
+#  \            /\            /\            /\
+#   \          /  \          /  \          /  \
+#    \        /    \        /    \        /    \
+#  +  \      /  +   \      /  +   \      /   +  \
+#      \    /        \    /        \    /        \
+#       \  /          \  /          \  /          \
+#  ______\/____________\/____________\/____________\
+#        /\            /\            /\            /
+#       /  \          /  \          /  \          /
+#      /    \        /    \        /    \        /
+#     /      \      /      \      /      \      /
+#    /        \    /        \    /        \    /
+#   /          \  /          \  /          \  /
+#  /____________\/____________\/____________\/______
+#  \            /\            /\            /\
+#   \          /  \          /  \          /  \
+#    \        /    \        /    \        /    \
+#  +  \      /  +   \      /  +   \      /  +   \
+
+
+# Lay down a nail pattern as shown by the + marks above
+#
+# im     - what does our artwork look like?
+# mesh   - 3D mesh to modify
+# offset - how much to shift from origin, in millimeters
+
+def artwork2(im, mesh, offset):
     global canvas_width_mm
     global triangle_side_mm
+    h = math.sqrt(3) * triangle_side_mm
     ctr = 0
+    canvas_height_mm = canvas_width_mm * im.size[1] / im.size[0]
     for x in arange(offset[0], canvas_width_mm, triangle_side_mm):
-        for y in arange(offset[1], canvas_width_mm, triangle_side_mm):
-            ctr += InvPyramid((x, y), [0, 0, 0], mesh)
+        for y in arange(offset[1], canvas_height_mm, h):
+            halftone = get_halftone((x,y), im)
+            ctr += InvPyramid((x, y), halftone, mesh)
     return ctr
+
+
+def rgb2abc(rgb):
+    return ((+ rgb[0] - rgb[1] - rgb[2] + 255) / 255.0,
+            (- rgb[0] + rgb[1] - rgb[2] + 255) / 255.0,
+            (- rgb[0] - rgb[1] + rgb[2] + 255) / 255.0)
+
+# (x, y) - position in millimeters
+def get_rgb((x,y), im):
+    global canvas_width_mm
+    pixels_per_mm = im.size[0] / canvas_width_mm
+    ix = x * pixels_per_mm
+    iy = y *  pixels_per_mm
+    return im.getpixel((ix, iy))
+
+def get_halftone((x,y), im):
+    rgb = get_rgb((x,y), im)
+    alpha = 1
+    y = round(0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2])
+    a = -1
+    b = -1
+    c = -1
+    lookup = rgb2abc(rgb)
+    while a < 0 or b < 0 or c < 0 or a > 1 or b > 1 or c > 1:
+        if (alpha < -0.2):
+            print "bug - why can't we find RGB %s %s %s" % rgb
+            break
+        a, b, c = rgb2abc((alpha * rgb[0]  + (1 - alpha) * y,
+                           alpha * rgb[1]  + (1 - alpha) * y,
+                           alpha * rgb[2]  + (1 - alpha) * y))
+        alpha = alpha - 0.1
+    return (a, b, c)
+
 
 def CreatePovFile(povname, povinclude):
   center = Vector3(canvas_width_mm / 2, canvas_width_mm / 2, 0)
-  camera = center + Vector3(0, 0, -0.5 * canvas_width_mm)
+  camera = center + Vector3(0, 0.0, -1.0 * canvas_width_mm)
   pov = open(povname, "w")
   print >>pov, """
 camera {
+  orthographic
   location %s
   look_at %s
 }
@@ -220,14 +297,28 @@ def main():
     global canvas_width_mm
     global triangle_side_mm
     global margin_mm
+
     mesh = MeshGenerator(triangle_side_mm, margin_mm)
+
     if len(sys.argv) == 2:
         infile = sys.argv[1]
     else:
         infile = "Lenna.png"
     im = Image.open(infile)
+    im = im.transpose(Image.FLIP_TOP_BOTTOM)
+
+    triangle_height = 0.5 * triangle_side_mm * math.sqrt(3)
+    centroid_height = 0.5 * triangle_side_mm * math.tan(math.pi / 6)
+
+    print centroid_height
+    print triangle_height
+
+
     nailcount = 0
-    nailcount += artwork2((0, 0), im, mesh)
+    nailcount += artwork2(im, mesh, (0, 0))
+    nailcount += artwork2(im, mesh, (0.5 * triangle_side_mm, triangle_height))
+#    nailcount += artwork2(im, mesh, (0, triangle_height + centroid_height))
+#    nailcount += artwork2(im, mesh, (0.5 * triangle_side_mm, centroid_height))
     stl = STL("/tmp/test.stl", "/tmp/test.pov", "Header")
     mesh.Render(stl);
     stl.Close()
