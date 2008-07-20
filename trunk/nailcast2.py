@@ -46,9 +46,9 @@ class MeshGenerator:
     def __init__(self, triangle_side_mm, margin_mm):
       self.nails = []
       self.triangle_side_mm = triangle_side_mm
-      self.dx = self.triangle_side_mm / 6.0
+      self.dx = triangle_side_mm / 6.0
       self.dy = self.dx * sqrt(3) / 2.0
-      self.margin_mm = margin_mm;
+      self.margin_mm = margin_mm
 
     def AddNail(self, nail):
       self.nails.append(nail)
@@ -177,10 +177,7 @@ def artwork2(offset, im, mesh):
     ctr = 0
     for x in arange(offset[0], canvas_width_mm, triangle_side_mm):
         for y in arange(offset[1], canvas_width_mm, triangle_side_mm):
-            ix = int(x)
-            iy = int(y)
-            halftone = [0, 0, 0]
-            ctr += InvPyramid((x, y), halftone, mesh)
+            ctr += InvPyramid((x, y), [0, 0, 0], mesh)
     return ctr
 
 def CreatePovFile(povname, povinclude):
