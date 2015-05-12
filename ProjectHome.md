@@ -1,0 +1,1 @@
+colored lights + fancy shapes = shadow based color halftoning
